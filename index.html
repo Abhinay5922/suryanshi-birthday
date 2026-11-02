@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Happy Birthday Suryanshi! 🎉</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!-- Google Fonts: Playfair Display & Poppins -->
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <!-- Confetti JS Library -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+        }
+        .font-playfair {
+            font-family: 'Playfair Display', serif;
+        }
+        /* Floating Balloon Animation */
+        @keyframes float {
+            0% { transform: translateY(0px) rotate(0deg); opacity: 1; }
+            50% { transform: translateY(-100px) rotate(5deg); opacity: 0.8; }
+            100% { transform: translateY(-200px) rotate(-5deg); opacity: 0; }
+        }
+        .floating-element {
+            animation: float 6s ease-in-out infinite;
+        }
+
+        /* ── Balloon rise animation ── */
+        @keyframes balloonRise {
+            0%   { transform: translateY(0) translateX(0px) rotate(0deg); opacity: 0; }
+            5%   { opacity: 1; }
+            25%  { transform: translateY(-25vh) translateX(12px) rotate(4deg); }
+            50%  { transform: translateY(-50vh) translateX(-10px) rotate(-4deg); }
+            75%  { transform: translateY(-75vh) translateX(8px) rotate(3deg); }
+            95%  { opacity: 0.7; }
+            100% { transform: translateY(-108vh) translateX(-6px) rotate(-3deg); opacity: 0; }
+        }
+
+        /* Balloon container sits behind everything */
+        #balloon-container {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: 0;
+        }
+
+        .balloon {
+            position: absolute;
+            bottom: -120px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            animation: balloonRise linear infinite;
+            will-change: transform, opacity;
+        }
+
+        /* The balloon body — an SVG circle with a slight oval */
+        .balloon-body {
+            width: 52px;
+            height: 62px;
+            border-radius: 50% 50% 48% 48% / 58% 58% 42% 42%;
+            position: relative;
+            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.35));
+        }
+        .balloon-body::after {
+            content: '';
+            position: absolute;
+            top: 12%;
+            left: 22%;
+            width: 18%;
+            height: 22%;
+            background: rgba(255,255,255,0.45);
+            border-radius: 50%;
+            transform: rotate(-35deg);
+        }
+        /* Tiny triangle knot at balloon bottom */
+        .balloon-knot {
+            width: 0;
+            height: 0;
+            border-left: 4px solid transparent;
+            border-right: 4px solid transparent;
+            margin-top: -1px;
+        }
+        /* String */
+        .balloon-string {
+            width: 1px;
+            height: 38px;
+            background: rgba(255,255,255,0.4);
+        }
+
+        /* ── Balloon colour palette ── */
+        .b-red    .balloon-body { background: radial-gradient(circle at 35% 35%, #ff8a80, #e53935); }
+        .b-red    .balloon-knot { border-top: 7px solid #c62828; }
+
+        .b-pink   .balloon-body { background: radial-gradient(circle at 35% 35%, #fce4ec, #e91e8c); }
+        .b-pink   .balloon-knot { border-top: 7px solid #ad1457; }
+
+        .b-yellow .balloon-body { background: radial-gradient(circle at 35% 35%, #fff9c4, #fdd835); }
+        .b-yellow .balloon-knot { border-top: 7px solid #f9a825; }
+
+        .b-orange .balloon-body { background: radial-gradient(circle at 35% 35%, #ffe0b2, #ff6d00); }
+        .b-orange .balloon-knot { border-top: 7px solid #e65100; }
+
+        .b-purple .balloon-body { background: radial-gradient(circle at 35% 35%, #e1bee7, #8e24aa); }
+        .b-purple .balloon-knot { border-top: 7px solid #6a1b9a; }
+
+        .b-cyan   .balloon-body { background: radial-gradient(circle at 35% 35%, #b2ebf2, #00acc1); }
+        .b-cyan   .balloon-knot { border-top: 7px solid #00838f; }
+
+        .b-green  .balloon-body { background: radial-gradient(circle at 35% 35%, #c8e6c9, #43a047); }
+        .b-green  .balloon-knot { border-top: 7px solid #2e7d32; }
+
+        .b-magenta .balloon-body { background: radial-gradient(circle at 35% 35%, #f8bbd0, #f06292); }
+        .b-magenta .balloon-knot { border-top: 7px solid #c2185b; }
+    </style>
+</head>
+<body class="bg-[#1a0f14] text-[#fce4ec] min-h-screen relative overflow-x-hidden selection:bg-pink-500 selection:text-white">
+
+    <!-- ── Balloon Background ── -->
+    <div id="balloon-container" aria-hidden="true"></div>
+
+    <!-- ── Fireworks Canvas ── -->
+    <canvas id="fireworksCanvas" style="position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;" aria-hidden="true"></canvas>
+
+    <!-- Background Music Audio Element -->
+    <audio id="bgMusic" loop>
+        <source src="happy_birthday.mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
+    </audio>
+
+    <!-- Music Toggle Floating Button -->
+    <button onclick="toggleMusic()" id="musicBtn" class="fixed top-5 right-5 z-50 bg-pink-600/80 hover:bg-pink-500 text-white p-3 rounded-full shadow-lg backdrop-blur-md transition transform hover:scale-110 flex items-center gap-2 px-4 cursor-pointer hidden">
+        <span id="musicIcon">⏸</span>
+        <span id="musicText" class="text-xs font-medium tracking-wider">Pause Music</span>
+    </button>
+
+    <!-- ── SPLASH / ENTRY SCREEN ── -->
+    <div id="splashScreen" class="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-[#1a0f14] cursor-pointer select-none" onclick="enterPage()">
+        <!-- animated glow -->
+        <div class="absolute w-80 h-80 bg-pink-600/25 rounded-full blur-3xl animate-pulse"></div>
+        <div class="absolute w-56 h-56 bg-rose-500/20 rounded-full blur-2xl animate-pulse" style="animation-delay:.6s"></div>
+
+        <div class="relative text-center space-y-5 px-6">
+            <div class="text-6xl animate-bounce">🎂</div>
+            <h1 class="font-playfair text-4xl md:text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-300 via-rose-300 to-amber-200">
+                Happy Birthday<br><span class="italic">Suryanshi!</span>
+            </h1>
+            <p class="text-pink-300/80 text-sm md:text-base tracking-wide">tap anywhere to open your surprise 🎁</p>
+            <!-- pulsing ring -->
+            <div class="mx-auto mt-2 w-14 h-14 rounded-full border-2 border-pink-400/60 animate-ping"></div>
+        </div>
+    </div>
+
+    <!-- HERO SECTION -->
+    <section class="relative min-h-screen flex flex-col items-center justify-center text-center px-4 overflow-hidden" style="z-index:2;">
+        <!-- Decorative Glow Orbs -->
+        <div class="absolute w-72 h-72 bg-pink-600/20 rounded-full blur-3xl -top-10 -left-10 pointer-events-none"></div>
+        <div class="absolute w-96 h-96 bg-rose-500/15 rounded-full blur-3xl -bottom-20 -right-20 pointer-events-none"></div>
+
+        <div class="z-10 max-w-2xl mx-auto space-y-6">
+            <span class="inline-block px-4 py-1.5 rounded-full bg-pink-900/50 border border-pink-500/30 text-pink-300 text-sm tracking-widest uppercase animate-pulse">
+                ✨ Special Day Celebration ✨
+            </span>
+            <h1 class="font-playfair text-5xl md:text-7xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-pink-300 via-rose-300 to-amber-200">
+                Happy Birthday, <br><span class="italic">Suryanshi!</span>
+            </h1>
+            <p class="text-gray-300 text-base md:text-lg max-w-lg mx-auto font-light leading-relaxed">
+                Wishing you a day filled with endless smiles, warmth, and all the magical moments your heart can hold.
+            </p>
+            <div class="pt-4">
+                <a href="#surprise" onclick="triggerConfetti(); openSurprisePopup();" class="inline-block bg-gradient-to-r from-pink-600 to-rose-500 text-white font-medium px-8 py-4 rounded-full shadow-lg hover:shadow-pink-500/30 hover:scale-105 transition transform duration-300 border border-pink-400/30">
+                    Open Your Surprise 💝
+                </a>
+            </div>
+        </div>
+
+        <!-- Scroll Indicator -->
+        <div class="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce text-pink-400/60">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
+            </svg>
+        </div>
+    </section>
+
+    <!-- PHOTO GALLERY SECTION -->
+    <section id="surprise" class="py-20 px-4 max-w-6xl mx-auto" style="position:relative;z-index:2;">
+        <div class="text-center mb-16 space-y-3">
+            <h2 class="font-playfair text-3xl md:text-5xl font-bold text-pink-200">Cherished Moments</h2>
+            <p class="text-gray-400 text-sm md:text-base">Hover or tap on the polaroids to read a sweet memory</p>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 pt-4">
+            
+            <!-- Polaroid 1 -->
+            <div class="group bg-white p-4 pb-6 rounded shadow-xl transform rotate-1 hover:rotate-0 hover:scale-105 transition duration-300 cursor-pointer relative overflow-hidden">
+                <div class="aspect-[4/5] bg-gray-100 overflow-hidden rounded-sm mb-4">
+                    <img src="photos/surya1.jpg" alt="Suryanshi Memory 1" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
+                </div>
+                <p class="font-playfair text-gray-800 text-center font-semibold text-lg">Radiant Smile ✨</p>
+                <p class="text-gray-500 text-xs text-center mt-1">Your smile lights up every room you walk into.</p>
+            </div>
+
+            <!-- Polaroid 2 -->
+            <div class="group bg-white p-4 pb-6 rounded shadow-xl transform -rotate-2 hover:rotate-0 hover:scale-105 transition duration-300 cursor-pointer relative overflow-hidden">
+                <div class="aspect-[4/5] bg-gray-100 overflow-hidden rounded-sm mb-4">
+                    <img src="photos/Surya2.jpg" alt="Suryanshi Memory 2" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
+                </div>
+                <p class="font-playfair text-gray-800 text-center font-semibold text-lg">Grace & Elegance 🌹</p>
+                <p class="text-gray-500 text-xs text-center mt-1">Poise and beauty in everything you do.</p>
+            </div>
+
+            <!-- Polaroid 3 -->
+            <div class="group bg-white p-4 pb-6 rounded shadow-xl transform rotate-2 hover:rotate-0 hover:scale-105 transition duration-300 cursor-pointer relative overflow-hidden">
+                <div class="aspect-[4/5] bg-gray-100 overflow-hidden rounded-sm mb-4">
+                    <img src="photos/Surya3.jpg" alt="Suryanshi Memory 3" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
+                </div>
+                <p class="font-playfair text-gray-800 text-center font-semibold text-lg">Endless Joy 💫</p>
+                <p class="text-gray-500 text-xs text-center mt-1">May your days always be filled with laughter and peace.</p>
+            </div>
+
+            <!-- Polaroid 4 — full width feature card -->
+            <div class="group bg-white p-4 pb-6 rounded shadow-xl transform -rotate-1 hover:rotate-0 hover:scale-105 transition duration-300 cursor-pointer relative overflow-hidden sm:col-span-2 lg:col-span-3 max-w-md mx-auto w-full">
+                <div class="aspect-[4/5] bg-gray-100 overflow-hidden rounded-sm mb-4">
+                    <img src="photos/Graphite.png" alt="Suryanshi Memory 4" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
+                </div>
+                <p class="font-playfair text-gray-800 text-center font-semibold text-lg">Here's to Another Amazing Year! 🥂</p>
+                <p class="text-gray-500 text-xs text-center mt-1">Wishing you the absolute best today and always, Suryanshi.</p>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- BIRTHDAY MESSAGE CARD SECTION -->
+    <section class="py-20 px-4 max-w-3xl mx-auto" style="position:relative;z-index:2;">
+        <div class="bg-[#24151c]/80 border border-pink-500/20 rounded-2xl p-8 md:p-12 shadow-2xl backdrop-blur-md relative">
+            <!-- Decorative corner accent -->
+            <div class="absolute -top-3 -right-3 text-pink-400 text-2xl animate-spin" style="animation-duration: 10s;">✨</div>
+            
+            <h3 class="font-playfair text-2xl md:text-4xl font-bold text-pink-200 mb-6 text-center">Dearest Suryanshi,</h3>
+            
+            <div class="space-y-4 text-gray-300 font-light leading-relaxed text-sm md:text-base">
+                <p>
+                    On your special day, I wanted to take a moment to remind you of how truly wonderful you are. Your vibrant spirit, kindness, and incredible energy bring so much warmth to everyone fortunate enough to know you.
+                </p>
+                <p>
+                    May this year bring you closer to all your dreams, fill your days with unexpected adventures, and surround you with the love and happiness you so deeply deserve. Never lose that beautiful spark that makes you, <span class="text-pink-300 font-medium">you</span>.
+                </p>
+                <p class="text-right pt-4 font-playfair italic text-pink-300 text-lg">
+                    With warmest wishes & celebrations,<br>
+                    <span class="not-italic font-sans font-normal text-sm text-gray-400">Abhinay</span>
+                </p>
+            </div>
+
+            <div class="mt-8 text-center">
+                <button onclick="triggerConfetti()" class="bg-pink-600 hover:bg-pink-500 text-white font-medium px-6 py-2.5 rounded-full text-sm shadow transition cursor-pointer">
+                    Celebrate Again 🎉
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- SURPRISE PHOTO POPUP MODAL -->
+    <div id="surpriseModal" class="fixed inset-0 z-[100] flex items-center justify-center p-4 hidden">
+        <!-- Backdrop -->
+        <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" onclick="closeSurprisePopup()"></div>
+        
+        <!-- Modal Card -->
+        <div class="relative z-10 bg-[#1a0f14] border border-pink-500/40 rounded-2xl shadow-2xl max-w-md w-full p-5 text-center animate-none" id="surpriseCard" style="transform: scale(0.8); opacity: 0; transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1), opacity 0.3s ease;">
+            
+            <!-- Close Button -->
+            <button onclick="closeSurprisePopup()" class="absolute top-3 right-3 text-pink-400 hover:text-white text-xl leading-none cursor-pointer transition">✕</button>
+            
+            <!-- Sparkle header -->
+            <p class="text-pink-300 text-xs tracking-widest uppercase mb-3 animate-pulse">✨ Your Special Surprise ✨</p>
+            
+            <!-- Photo frame (polaroid style) -->
+            <div class="bg-white p-3 pb-5 rounded shadow-xl mx-auto max-w-[300px]">
+                <div class="overflow-hidden rounded-sm">
+                    <img src="photos/suryanshi_celebration.png" alt="Suryanshi's Birthday Surprise" class="w-full object-cover rounded-sm">
+                </div>
+                <p class="font-playfair text-gray-800 text-center font-semibold text-base mt-3">Happy Birthday, Suryanshi! 🎂</p>
+            </div>
+
+            <!-- Message -->
+            <p class="text-gray-300 text-sm mt-4 leading-relaxed px-2">
+                This one's just for you — a little reminder of how truly special you are. 💖
+            </p>
+
+            <!-- Celebrate button -->
+            <button onclick="triggerConfetti()" class="mt-4 bg-gradient-to-r from-pink-600 to-rose-500 text-white text-sm font-medium px-6 py-2 rounded-full hover:scale-105 transition cursor-pointer shadow">
+                🎉 Celebrate!
+            </button>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="py-8 text-center text-xs text-gray-500 border-t border-pink-900/30">
+        <p>Made with ❤️ specially for Suryanshi's Birthday</p>
+    </footer>
+
+    <!-- JAVASCRIPT ANIMATIONS & LOGIC -->
+    <script>
+        /* ── Balloon Generator ── */
+        (function () {
+            const container = document.getElementById('balloon-container');
+            const colors = ['b-red','b-pink','b-yellow','b-orange','b-purple','b-cyan','b-green','b-magenta'];
+            const count = 8; // number of balloons on screen at once
+
+            function rand(min, max) {
+                return Math.random() * (max - min) + min;
+            }
+
+            for (let i = 0; i < count; i++) {
+                const color = colors[i % colors.length];
+                const left  = rand(1, 98);           // % across screen
+                const dur   = rand(9, 18);            // seconds to rise
+                const delay = rand(0, dur);           // stagger start
+                const scale = rand(0.65, 1.2);        // size variety
+
+                const balloon = document.createElement('div');
+                balloon.className = `balloon ${color}`;
+                balloon.style.left  = `${left}%`;
+                balloon.style.animationDuration  = `${dur}s`;
+                balloon.style.animationDelay     = `-${delay}s`;   // negative = already mid-air at load
+                balloon.style.transform          = `scale(${scale})`;
+                balloon.style.transformOrigin    = 'bottom center';
+
+                balloon.innerHTML = `
+                    <div class="balloon-body"></div>
+                    <div class="balloon-knot"></div>
+                    <div class="balloon-string"></div>
+                `;
+                container.appendChild(balloon);
+            }
+        })();
+    </script>
+
+    <!-- MAIN LOGIC -->
+    <script>
+        // Surprise Popup
+        function openSurprisePopup() {
+            const modal = document.getElementById('surpriseModal');
+            const card = document.getElementById('surpriseCard');
+            modal.classList.remove('hidden');
+            // Trigger animation on next frame
+            requestAnimationFrame(() => {
+                card.style.transform = 'scale(1)';
+                card.style.opacity = '1';
+            });
+        }
+
+        function closeSurprisePopup() {
+            const modal = document.getElementById('surpriseModal');
+            const card = document.getElementById('surpriseCard');
+            card.style.transform = 'scale(0.8)';
+            card.style.opacity = '0';
+            setTimeout(() => modal.classList.add('hidden'), 300);
+        }
+
+        // Close on Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeSurprisePopup();
+        });
+
+        // Confetti Trigger Function
+        function triggerConfetti() {
+            confetti({
+                particleCount: 100,
+                spread: 70,
+                origin: { y: 0.6 },
+                colors: ['#ec4899', '#f43f5e', '#fb7185', '#fde047', '#ffffff']
+            });
+        }
+
+        // Trigger confetti on initial load after 1 second
+        window.addEventListener('DOMContentLoaded', () => {
+            setTimeout(triggerConfetti, 800);
+        });
+
+        // ── Splash screen entry + music autoplay ──
+        let isPlaying = false;
+        const bgMusic = document.getElementById('bgMusic');
+        const musicBtn = document.getElementById('musicBtn');
+        const musicIcon = document.getElementById('musicIcon');
+        const musicText = document.getElementById('musicText');
+
+        function enterPage() {
+            const splash = document.getElementById('splashScreen');
+
+            // Fade out splash
+            splash.style.transition = 'opacity 0.8s ease';
+            splash.style.opacity = '0';
+            setTimeout(() => splash.style.display = 'none', 800);
+
+            // Start music
+            bgMusic.volume = 0.5;
+            bgMusic.play().then(() => {
+                isPlaying = true;
+                musicBtn.classList.remove('hidden');
+            }).catch(() => {
+                musicBtn.classList.remove('hidden');
+            });
+        }
+
+        function toggleMusic() {
+            if (isPlaying) {
+                bgMusic.pause();
+                isPlaying = false;
+                musicIcon.textContent = '🎵';
+                musicText.textContent = 'Play Music';
+                musicBtn.classList.remove('bg-rose-500');
+                musicBtn.classList.add('bg-pink-600/80');
+            } else {
+                bgMusic.volume = 0.5;
+                bgMusic.play().then(() => {
+                    isPlaying = true;
+                    musicIcon.textContent = '⏸';
+                    musicText.textContent = 'Pause Music';
+                    musicBtn.classList.remove('bg-pink-600/80');
+                    musicBtn.classList.add('bg-rose-500');
+                }).catch(e => console.log("Audio error:", e));
+            }
+        }
+    </script>
+    <!-- ── Fireworks Script ── -->
+    <script>
+    (function () {
+        const canvas = document.getElementById('fireworksCanvas');
+        const ctx = canvas.getContext('2d');
+
+        function resize() {
+            canvas.width  = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        resize();
+        window.addEventListener('resize', resize);
+
+        const COLORS = [
+            '#ff6eb4','#ff9de2','#ffdd57','#ff4f6d',
+            '#c084fc','#fb7185','#fde047','#38bdf8','#ffffff'
+        ];
+
+        // Particle class
+        class Particle {
+            constructor(x, y, color) {
+                this.x = x; this.y = y;
+                this.color = color;
+                const angle = Math.random() * Math.PI * 2;
+                const speed = Math.random() * 5 + 1.5;
+                this.vx = Math.cos(angle) * speed;
+                this.vy = Math.sin(angle) * speed;
+                this.alpha = 1;
+                this.decay = Math.random() * 0.018 + 0.012;
+                this.radius = Math.random() * 2.5 + 1;
+            }
+            update() {
+                this.x  += this.vx;
+                this.y  += this.vy;
+                this.vy += 0.06;          // gravity
+                this.vx *= 0.98;
+                this.alpha -= this.decay;
+            }
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = Math.max(this.alpha, 0);
+                ctx.fillStyle = this.color;
+                ctx.shadowBlur = 6;
+                ctx.shadowColor = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        // Rocket class
+        class Rocket {
+            constructor() { this.reset(); }
+            reset() {
+                this.x  = Math.random() * canvas.width;
+                this.y  = canvas.height;
+                this.tx = Math.random() * canvas.width;
+                this.ty = Math.random() * canvas.height * 0.55 + 50;
+                const angle = Math.atan2(this.ty - this.y, this.tx - this.x);
+                const speed = Math.random() * 4 + 6;
+                this.vx = Math.cos(angle) * speed;
+                this.vy = Math.sin(angle) * speed;
+                this.color = COLORS[Math.floor(Math.random() * COLORS.length)];
+                this.trail = [];
+                this.exploded = false;
+                this.delay = Math.random() * 160;   // stagger launches
+            }
+            update(particles) {
+                if (this.delay > 0) { this.delay--; return; }
+                this.trail.push({ x: this.x, y: this.y, alpha: 0.6 });
+                if (this.trail.length > 12) this.trail.shift();
+                this.x += this.vx;
+                this.y += this.vy;
+                this.vy += 0.12;   // gravity on rocket
+                // Explode when slowing down near target
+                if (this.vy >= -0.5 && !this.exploded) {
+                    this.exploded = true;
+                    const count = Math.floor(Math.random() * 60) + 60;
+                    for (let i = 0; i < count; i++) {
+                        particles.push(new Particle(this.x, this.y, this.color));
+                    }
+                    // secondary smaller burst in white/gold
+                    for (let i = 0; i < 20; i++) {
+                        particles.push(new Particle(this.x, this.y, '#ffffff'));
+                    }
+                    this.reset();
+                }
+            }
+            draw() {
+                if (this.delay > 0) return;
+                // draw trail
+                this.trail.forEach((t, i) => {
+                    ctx.save();
+                    ctx.globalAlpha = t.alpha * (i / this.trail.length) * 0.5;
+                    ctx.fillStyle = this.color;
+                    ctx.beginPath();
+                    ctx.arc(t.x, t.y, 1.5, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.restore();
+                });
+                // draw rocket dot
+                ctx.save();
+                ctx.globalAlpha = 0.9;
+                ctx.fillStyle = '#ffffff';
+                ctx.shadowBlur = 8;
+                ctx.shadowColor = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, 2.5, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        const rockets   = Array.from({ length: 5 }, () => new Rocket());
+        let   particles = [];
+
+        function loop() {
+            // Clear only — no background fill so page content stays visible
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Update & draw rockets
+            rockets.forEach(r => { r.update(particles); r.draw(); });
+
+            // Update & draw particles
+            particles = particles.filter(p => p.alpha > 0);
+            particles.forEach(p => { p.update(); p.draw(); });
+
+            requestAnimationFrame(loop);
+        }
+        loop();
+    })();
+    </script>
+
+</body>
+</html>
